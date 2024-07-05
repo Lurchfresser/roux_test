@@ -1,5 +1,8 @@
 use dotenv::dotenv;
-use roux::{util::FeedOption, Reddit};
+use roux::{
+    comment::CommentData, response::BasicThing, submission::SubmissionData, util::FeedOption,
+    MaybeReplies, Reddit, Subreddit,
+};
 
 #[tokio::main]
 async fn main() {
@@ -28,7 +31,7 @@ async fn main() {
     // Now you are able to:
 
     // Get top posts with limit = 10.
-    let top = subreddit.top(10, None).await;
+    let top = subreddit.latest(10, None).await;
 
     match &top {
         Ok(top) => {
@@ -42,21 +45,24 @@ async fn main() {
     let mut last_id = top.unwrap().data.after.unwrap();
 
     loop {
+        println!("-------------------");
+
         let top_after = subreddit
-            .top(
-                10,
-                Some(FeedOption::new().after(&last_id.clone())),
-            )
+            .latest(10, Some(FeedOption::new().after(&last_id.clone())))
             .await;
 
         match &top_after {
             Ok(top_after_ok) => {
                 for post in &top_after_ok.data.children {
                     println!("Title: {}", post.data.title);
+                    print_comments(post, &subreddit).await;
                 }
                 if let Some(after) = &top_after_ok.data.after {
-                    last_id = after.clone();
+                    println!("last_id: {}", last_id);
+                    println!("len: {}", top_after_ok.data.children.len());
+                    last_id.clone_from(after);
                 } else {
+                    println!("No more posts, last id: {}", last_id);
                     break;
                 }
             }
@@ -64,6 +70,32 @@ async fn main() {
                 eprintln!("Error fetching top posts: {:?}", e);
                 break;
             }
+        }
+    }
+}
+
+async fn print_comments(post: &BasicThing<SubmissionData>, subreddit: &Subreddit) {
+    let comment_tree = subreddit
+        .article_comments(&post.data.id, Some(10), Some(10))
+        .await;
+
+    match &comment_tree {
+        Ok(comment_tree) => {
+            for comment in &comment_tree.data.children {
+                recursive_print(&comment.data, 1);
+            }
+        }
+        Err(e) => eprintln!("Error fetching comments: {:?}", e),
+    }
+}
+
+fn recursive_print(comment: &CommentData, depth: u32) {
+    if let Some(body) = &comment.body {
+        println!("{}{}{}", depth, " ".repeat(depth as usize), body);
+    }
+    if let Some(MaybeReplies::Reply(replies)) = &comment.replies {
+        for reply in &replies.data.children {
+            recursive_print(&reply.data, depth + 1);
         }
     }
 }

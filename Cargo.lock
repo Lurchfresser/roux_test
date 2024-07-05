@@ -625,8 +625,6 @@ dependencies = [
 [[package]]
 name = "roux"
 version = "2.2.12"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "15948b57a15aed182d06fe3810eaf27dda15583c2f714437e1dd88fa12f33b82"
 dependencies = [
  "maybe-async",
  "reqwest",

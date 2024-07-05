@@ -7,3 +7,6 @@ edition = "2021"
 dotenv = "0.15.0"
 roux = "2.2.12"
 tokio = { version = "1.0", features = ["full"] }
+
+[patch.crates-io]
+roux = {path = "/home/lurchfresser/.rhack/roux-2.2.12"}
