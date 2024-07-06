@@ -55,6 +55,14 @@ async fn main() {
             Ok(top_after_ok) => {
                 for post in &top_after_ok.data.children {
                     println!("Title: {}", post.data.title);
+                    if let Some(flairs) = &post.data.link_flair_richtext {
+                        for flair in flairs {
+                            match flair {
+                                roux::submission::FlairRichText::Emoji { a, u: _, e: _ } => print!("{}",a),
+                                roux::submission::FlairRichText::Text { e: _, t } => print!("{}",t)
+                            }
+                        }
+                    }
                     print_comments(post, &subreddit).await;
                 }
                 if let Some(after) = &top_after_ok.data.after {
@@ -76,7 +84,7 @@ async fn main() {
 
 async fn print_comments(post: &BasicThing<SubmissionData>, subreddit: &Subreddit) {
     let comment_tree = subreddit
-        .article_comments(&post.data.id, Some(10), Some(10))
+        .article_comments(&post.data.id, None, Some(10))
         .await;
 
     match &comment_tree {
