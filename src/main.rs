@@ -27,8 +27,15 @@ async fn main() {
 
     use roux::Subreddit;
 
-    let subreddit = Subreddit::new_oauth("CryptoCurrency", &me.client);
+    let subreddit = Subreddit::new_oauth("lurchfresserTest", &me.client);
     // Now you are able to:
+    
+    let link_flairs = subreddit.link_flairs().await.unwrap();
+
+    for flair in link_flairs {
+        println!("Flair: {}", flair.text);
+    }
+
 
     // Get top posts with limit = 10.
     let top = subreddit.latest(10, None).await;
